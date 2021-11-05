@@ -83,5 +83,14 @@ func (controller *campaignController) GetCampaignById(c *gin.Context) {
 }
 
 func (controller *campaignController) ExportCampaignExcel(c *gin.Context) {
+	id := c.Param("id")
 
+	file, err := controller.campaignService.ExportCampaignExcel(id)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, "failed to export")
+		return
+	}
+
+	//c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	c.JSON(http.StatusOK, file)
 }
