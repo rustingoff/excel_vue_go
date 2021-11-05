@@ -20,11 +20,19 @@ var (
 func main() {
 
 	router := gin.Default()
+	router.Use(gin.Recovery())
+
+	authController := router.Group("/auth")
+	{
+		authController.POST("/sign-up")
+		authController.POST("/sign-in")
+	}
 
 	campaignRouter := router.Group("/campaign")
 	{
 		campaignRouter.GET("/", campaignController.GetAllCampaigns)
 		campaignRouter.GET("/:id", campaignController.GetCampaignById)
+		campaignRouter.POST("/export/:id", campaignController.ExportCampaignExcel)
 		campaignRouter.POST("/", campaignController.CreateCampaign)
 		campaignRouter.DELETE("/:id", campaignController.DeleteCamapign)
 	}
