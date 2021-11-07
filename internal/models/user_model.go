@@ -1,14 +1,15 @@
 package models
 
 type User struct {
-	ID string `json:"id"`
+	ID string `json:"-"`
 
 	Username string `json:"username"`
 	Password string `json:"password"`
 	Email    string `json:"email"`
+	Active   bool   `json:"active"`
 }
 
 type SingIn struct {
-	Username string `json:"username"`
+	Email    string `json:"email"`
 	Password string `json:"password"`
 }

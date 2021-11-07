@@ -11,9 +11,9 @@ import (
 
 type CampaignRepository interface {
 	CreateCampaign(campaign models.Campaign) error
-	DeleteCamapign(string) error
+	DeleteCampaign(string) error
 
-	GetAllCampaigns() ([]models.Campaign, error)
+	GetAllCampaigns(userID string) ([]models.Campaign, error)
 	GetCampaignById(string) (models.Campaign, error)
 }
 
@@ -38,7 +38,7 @@ func (repo *campaignRepository) CreateCampaign(campaign models.Campaign) error {
 	return nil
 }
 
-func (repo *campaignRepository) DeleteCamapign(id string) error {
+func (repo *campaignRepository) DeleteCampaign(id string) error {
 
 	_, err := repo.elasticClient.Delete().Index(_CampaignIndex).Id(id).Do(context.TODO())
 	if err != nil {
@@ -49,8 +49,10 @@ func (repo *campaignRepository) DeleteCamapign(id string) error {
 	return nil
 }
 
-func (repo *campaignRepository) GetAllCampaigns() ([]models.Campaign, error) {
-	res, err := repo.elasticClient.Search().Index(_CampaignIndex).Do(context.TODO())
+func (repo *campaignRepository) GetAllCampaigns(userID string) ([]models.Campaign, error) {
+	query := elastic.NewMatchQuery("user_id", userID)
+
+	res, err := repo.elasticClient.Search().Index(_CampaignIndex).Query(query).Do(context.TODO())
 	if err != nil {
 		log.Println("[ERR]: failed to get all campaigns")
 		return nil, err
@@ -67,6 +69,7 @@ func (repo *campaignRepository) GetAllCampaigns() ([]models.Campaign, error) {
 			return nil, err
 		}
 
+		campaign.ID = res.Hits.Hits[i].Id
 		campaigns = append(campaigns, campaign)
 	}
 
@@ -90,7 +93,7 @@ func (repo *campaignRepository) GetCampaignById(id string) (models.Campaign, err
 			log.Println("[ERR]: failed to unmarshal source")
 			return models.Campaign{}, err
 		}
-
+		campaign.ID = res.Hits.Hits[0].Id
 		return campaign, nil
 	}
 

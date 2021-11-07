@@ -6,17 +6,18 @@ import (
 	"github.com/rustingoff/excel_vue_go/internal/repositories"
 	"github.com/xuri/excelize/v2"
 	"log"
+	"os"
 	"time"
 )
 
 type CampaignService interface {
 	CreateCampaign(campaign models.Campaign) error
-	DeleteCamapign(string) error
+	DeleteCampaign(string) error
 
-	GetAllCampaigns() ([]models.Campaign, error)
+	GetAllCampaigns(userID string) ([]models.Campaign, error)
 	GetCampaignById(string) (models.Campaign, error)
 
-	ExportCampaignExcel(string) (*excelize.File, error)
+	ExportCampaignExcel(string) error
 }
 
 type campaignService struct {
@@ -34,28 +35,39 @@ func (service *campaignService) CreateCampaign(campaign models.Campaign) error {
 	return service.repo.CreateCampaign(campaign)
 }
 
-func (service *campaignService) DeleteCamapign(id string) error {
-	return service.repo.DeleteCamapign(id)
+func (service *campaignService) DeleteCampaign(id string) error {
+	err := service.repo.DeleteCampaign(id)
+	if err != nil {
+		return err
+	}
+
+	err = os.Remove("./static/exports/" + id + ".xlsx")
+	if err != nil {
+		log.Println("[ERR]: failed to delete a excel file, ", err.Error())
+		return err
+	}
+
+	return nil
 }
 
-func (service *campaignService) GetAllCampaigns() ([]models.Campaign, error) {
-	return service.repo.GetAllCampaigns()
+func (service *campaignService) GetAllCampaigns(userID string) ([]models.Campaign, error) {
+	return service.repo.GetAllCampaigns(userID)
 }
 
 func (service *campaignService) GetCampaignById(id string) (models.Campaign, error) {
 	return service.repo.GetCampaignById(id)
 }
 
-func (service *campaignService) ExportCampaignExcel(id string) (*excelize.File, error) {
+func (service *campaignService) ExportCampaignExcel(id string) error {
 	campaign, err := service.repo.GetCampaignById(id)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	f, err := excelize.OpenFile("./static/template.xlsx")
 	if err != nil {
 		log.Println("[ERR]: failed to open excel file, ", err.Error())
-		return nil, err
+		return err
 	}
 
 	var matchType string
@@ -71,7 +83,7 @@ func (service *campaignService) ExportCampaignExcel(id string) (*excelize.File, 
 		}
 		c, err := service.writeExportCampaign(f, (j*6)+count, campaign, matchType, campaign.Keywords[int(campaign.TotalKeywords)*j:int(campaign.TotalKeywords)*(j+1)])
 		if err != nil {
-			return nil, err
+			return err
 		}
 		count += int(campaign.TotalKeywords) + c
 		if j == campaignsCount-1 && campaignsCount > 1 {
@@ -79,7 +91,7 @@ func (service *campaignService) ExportCampaignExcel(id string) (*excelize.File, 
 			if restKeyCount > 0 {
 				_, err = service.writeExportCampaign(f, ((j+1)*6)+count, campaign, matchType, campaign.Keywords[int(campaign.TotalKeywords)*(j+1):len(campaign.Keywords)])
 				if err != nil {
-					return nil, err
+					return err
 				}
 			}
 			count += restKeyCount + 6
@@ -89,10 +101,10 @@ func (service *campaignService) ExportCampaignExcel(id string) (*excelize.File, 
 	err = f.SaveAs("./static/exports/" + campaign.ID + ".xlsx")
 	if err != nil {
 		log.Println("[ERR]: failed to save file, ", err.Error())
-		return nil, err
+		return err
 	}
 
-	return f, nil
+	return nil
 }
 
 func (service *campaignService) writeExportCampaign(f *excelize.File, count int, campaign models.Campaign, nameExact string, keywords []string) (int, error) {

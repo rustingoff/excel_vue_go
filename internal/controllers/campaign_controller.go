@@ -10,7 +10,7 @@ import (
 
 type CampaignController interface {
 	CreateCampaign(c *gin.Context)
-	DeleteCamapign(c *gin.Context)
+	DeleteCampaign(c *gin.Context)
 
 	GetAllCampaigns(c *gin.Context)
 	GetCampaignById(c *gin.Context)
@@ -27,10 +27,13 @@ func GetCampaignController(service services.CampaignService) CampaignController 
 }
 
 func (controller *campaignController) CreateCampaign(c *gin.Context) {
+	userByToken, _ := c.Get("currentUser")
+
 	var campaign models.Campaign
+	campaign.UserID = userByToken.(models.User).ID
 
 	if err := c.ShouldBindJSON(&campaign); err != nil {
-		log.Println("[ERR]: failed binding json to structure")
+		log.Println("[ERR]: failed binding json to structure, ", err.Error())
 		c.AbortWithStatusJSON(http.StatusUnprocessableEntity, "invalid json structure")
 		return
 	}
@@ -45,10 +48,10 @@ func (controller *campaignController) CreateCampaign(c *gin.Context) {
 	c.JSON(http.StatusCreated, "OK")
 }
 
-func (controller *campaignController) DeleteCamapign(c *gin.Context) {
+func (controller *campaignController) DeleteCampaign(c *gin.Context) {
 	var campaignID = c.Param("id")
 
-	err := controller.campaignService.DeleteCamapign(campaignID)
+	err := controller.campaignService.DeleteCampaign(campaignID)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, "failed to delete")
 		return
@@ -59,7 +62,10 @@ func (controller *campaignController) DeleteCamapign(c *gin.Context) {
 }
 
 func (controller *campaignController) GetAllCampaigns(c *gin.Context) {
-	campaigns, err := controller.campaignService.GetAllCampaigns()
+	userByToken, _ := c.Get("currentUser")
+	userID := userByToken.(models.User).ID
+
+	campaigns, err := controller.campaignService.GetAllCampaigns(userID)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, "failed to get all")
 		return
@@ -85,12 +91,14 @@ func (controller *campaignController) GetCampaignById(c *gin.Context) {
 func (controller *campaignController) ExportCampaignExcel(c *gin.Context) {
 	id := c.Param("id")
 
-	file, err := controller.campaignService.ExportCampaignExcel(id)
+	err := controller.campaignService.ExportCampaignExcel(id)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, "failed to export")
 		return
 	}
 
-	//c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-	c.JSON(http.StatusOK, file)
+	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	c.File("./static/exports/" + id + ".xlsx")
+
+	log.Println("[INF]: excel was exported successfully")
 }
