@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	server "github.com/rustingoff/excel_vue_go"
 	"github.com/rustingoff/excel_vue_go/internal/controllers"
@@ -35,6 +36,7 @@ func main() {
 
 	router := gin.Default()
 	router.Use(gin.Recovery())
+	router.Use(cors.Default())
 
 	authController := router.Group("/auth")
 	{

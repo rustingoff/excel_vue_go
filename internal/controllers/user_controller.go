@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"time"
 )
 
 type UserController interface {
@@ -127,6 +128,6 @@ func (controller *userController) Login(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, "failed to identify user")
 		return
 	}
-
+	c.SetCookie("Authorization", userToken, int(time.Hour*24), "/", "localhost", false, true)
 	c.JSON(http.StatusOK, userToken)
 }
