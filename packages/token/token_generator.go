@@ -9,7 +9,6 @@ import (
 
 const (
 	_Cost     = 16
-	salt      = "9/--1wfre6_wA;Q)VxSAJ{"
 	tokenTTL  = 24 * 7 * time.Hour // 7 days for token
 	signInKey = "rhTC5@<HD<`(6!F%F8=cWw^`2zBnAxCr}kHP"
 )

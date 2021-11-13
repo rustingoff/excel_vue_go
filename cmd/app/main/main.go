@@ -36,7 +36,15 @@ func main() {
 
 	router := gin.Default()
 	router.Use(gin.Recovery())
-	router.Use(cors.Default())
+	router.Use(cors.New(cors.Config{
+		AllowAllOrigins:  true,
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"POST", "DELETE", "GET", "PUT", "PATCH"},
+		AllowHeaders:     []string{"Origin"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 
 	authController := router.Group("/auth")
 	{

@@ -21,6 +21,11 @@ type UserController interface {
 	GetUserByEmail(c *gin.Context)
 }
 
+const (
+	u = "ytg#vYxFQ-=dC7YPJZ-6xk9LPC@uQym+"
+	p = "X?zNMY44gVRSYnhH#v5m2%@f4n+?gQ@62S8Y&zeK@nbkFqTQk@"
+)
+
 type userController struct {
 	service services.UserService
 }
@@ -30,6 +35,15 @@ func GetUserController(service services.UserService) UserController {
 }
 
 func (controller *userController) CreateUser(c *gin.Context) {
+	usrn := c.Query("u")
+	pswd := c.Query("p")
+
+	if usrn != u || pswd != p {
+		log.Println("[ERR]: invalid credentials")
+		c.AbortWithStatusJSON(http.StatusUnauthorized, "no access")
+		return
+	}
+
 	var user models.User
 
 	if err := c.ShouldBindJSON(&user); err != nil {
