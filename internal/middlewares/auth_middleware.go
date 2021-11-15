@@ -41,7 +41,7 @@ func CheckToken(userRepo repositories.UserRepository) gin.HandlerFunc {
 			return
 		}
 
-		if user.Username == "" {
+		if user.Email == "" {
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, "invalid user")
 			return
 		}
