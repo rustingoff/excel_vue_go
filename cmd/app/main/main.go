@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	server "github.com/rustingoff/excel_vue_go"
 	"github.com/rustingoff/excel_vue_go/internal/controllers"
@@ -36,15 +35,6 @@ func main() {
 
 	router := gin.Default()
 	router.Use(gin.Recovery())
-	router.Use(cors.New(cors.Config{
-		AllowAllOrigins:  true,
-		AllowOrigins:     []string{"*"},
-		AllowMethods:     []string{"POST", "DELETE", "GET", "PUT", "PATCH"},
-		AllowHeaders:     []string{"Origin"},
-		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
-		MaxAge:           12 * time.Hour,
-	}))
 
 	authController := router.Group("/auth")
 	{

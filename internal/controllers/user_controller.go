@@ -9,7 +9,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"time"
 )
 
 type UserController interface {
@@ -22,8 +21,8 @@ type UserController interface {
 }
 
 const (
-	u = "ytg#vYxFQ-=dC7YPJZ-6xk9LPC@uQym+"
-	p = "X?zNMY44gVRSYnhH#v5m2%@f4n+?gQ@62S8Y&zeK@nbkFqTQk@"
+	u = "CL4zZ5SLcP5XM7cGPhQkwPrnCJzTQtRE"
+	p = "Te3bRZ5VYrzxXhzz8kxsrb2GPkfKpnhUuZd2t3GJFDBmVLXLVk"
 )
 
 type userController struct {
@@ -113,7 +112,7 @@ func (controller *userController) Login(c *gin.Context) {
 	}
 
 	user, err := controller.service.GetUserByEmail(input.Email)
-	if user.Username == "" {
+	if user.Email == "" {
 		c.AbortWithStatusJSON(http.StatusBadRequest, "user not found")
 		return
 	}
@@ -142,6 +141,6 @@ func (controller *userController) Login(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, "failed to identify user")
 		return
 	}
-	c.SetCookie("Authorization", userToken, int(time.Hour*24), "/", "localhost", false, true)
+	//c.SetCookie("Authorization", userToken, int(time.Hour*24), "/", "localhost", false, true)
 	c.JSON(http.StatusOK, userToken)
 }
