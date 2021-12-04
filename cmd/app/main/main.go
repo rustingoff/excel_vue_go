@@ -35,6 +35,7 @@ func main() {
 
 	router := gin.Default()
 	router.Use(gin.Recovery())
+	router.Use(middlewares.CorsMiddleware())
 
 	authController := router.Group("/auth")
 	{

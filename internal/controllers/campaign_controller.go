@@ -1,11 +1,16 @@
 package controllers
 
 import (
+	"bytes"
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/rustingoff/excel_vue_go/internal/models"
 	"github.com/rustingoff/excel_vue_go/internal/services"
+	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 )
 
 type CampaignController interface {
@@ -32,13 +37,16 @@ func (controller *campaignController) CreateCampaign(c *gin.Context) {
 	var campaign models.Campaign
 	campaign.UserID = userByToken.(models.User).ID
 
-	if err := c.ShouldBindJSON(&campaign); err != nil {
-		log.Println("[ERR]: failed binding json to structure, ", err.Error())
-		c.AbortWithStatusJSON(http.StatusUnprocessableEntity, "invalid json structure")
+	bytesBody, _ := ioutil.ReadAll(c.Request.Body)
+
+	err := json.Unmarshal(bytesBody, &campaign)
+	if err != nil {
+		log.Println(err.Error())
+		c.AbortWithStatusJSON(http.StatusBadRequest, "failed to create")
 		return
 	}
 
-	err := controller.campaignService.CreateCampaign(campaign)
+	err = controller.campaignService.CreateCampaign(campaign)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, "failed to create")
 		return
@@ -98,7 +106,26 @@ func (controller *campaignController) ExportCampaignExcel(c *gin.Context) {
 	}
 
 	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-	c.File("./static/exports/" + id + ".xlsx")
 
+	buf := bytes.NewBuffer(nil)
+	f, err := os.Open("./static/exports/" + id + ".xlsx")
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
+
+	_, err = io.Copy(buf, f)
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
+	defer func() {
+		if err := f.Close(); err != nil {
+			log.Println(err.Error())
+			return
+		}
+	}()
+
+	c.JSON(http.StatusOK, buf.Bytes())
 	log.Println("[INF]: excel was exported successfully")
 }

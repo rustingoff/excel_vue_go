@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/olivere/elastic/v7"
 	"github.com/rustingoff/excel_vue_go/internal/models"
 	"log"
@@ -29,11 +30,13 @@ func GetCampaignRepository(e *elastic.Client) CampaignRepository {
 
 func (repo *campaignRepository) CreateCampaign(campaign models.Campaign) error {
 
-	_, err := repo.elasticClient.Index().Index(_CampaignIndex).BodyJson(campaign).Do(context.TODO())
+	res, err := repo.elasticClient.Index().Index(_CampaignIndex).BodyJson(campaign).Do(context.TODO())
 	if err != nil {
 		log.Println("[ERR]: failed to create campaign, ", err.Error())
 		return err
 	}
+
+	fmt.Println(res.Id)
 
 	return nil
 }

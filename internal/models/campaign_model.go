@@ -1,7 +1,7 @@
 package models
 
 type Campaign struct {
-	ID string `json:"-"`
+	ID string `json:"id"`
 
 	UserID string `json:"user_id"`
 
